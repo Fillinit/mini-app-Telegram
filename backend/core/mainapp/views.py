@@ -4,14 +4,33 @@ from rest_framework.response import Response
 from django.conf import settings
 import requests
 import json
-from .models import Product, Order
-from .serializers import ProductSerializer, OrderSerializer
+from .models import Catalog, Product, Order
+from .serializers import CatalogSerializer, ProductSerializer, OrderSerializer
+from django_filters.rest_framework import DjangoFilterBackend
 
 
 # Константы для Telegram API
 TELEGRAM_API_URL = "https://api.telegram.org/bot"
 TELEGRAM_BOT_TOKEN = settings.TELEGRAM_BOT_TOKEN
 PAYMENT_PROVIDER_TOKEN = settings.PAYMENT_PROVIDER_TOKEN
+
+class CatalogViewSet(viewsets.ModelViewSet):
+    """
+    Вьюсет для работы с каталогами
+    """
+    queryset = Catalog.objects.all()
+    serializer_class = CatalogSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['actual']
+    
+    @action(detail=False, methods=['get'])
+    def actual(self, request):
+        """
+        Эндпоинт для получения только актуальных каталогов
+        """
+        actual_catalogs = Catalog.objects.filter(actual=True)
+        serializer = self.get_serializer(actual_catalogs, many=True)
+        return Response(serializer.data)
 
 
 class ProductViewSet(viewsets.ReadOnlyModelViewSet):
@@ -20,6 +39,8 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
     """
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['catalog']  
 
 
 class OrderViewSet(viewsets.ModelViewSet):

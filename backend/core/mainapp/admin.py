@@ -1,7 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import Product, ProductOption, Order, OrderItem
-
+from .models import Catalog, Product, ProductOption, Order, OrderItem
 
 class ProductOptionInline(admin.TabularInline):
     """
@@ -11,20 +10,74 @@ class ProductOptionInline(admin.TabularInline):
     extra = 1
     fields = ('name', 'values')
 
+@admin.register(Catalog)
+class CatalogAdmin(admin.ModelAdmin):
+    """
+    Админ-панель для модели Catalog
+    """
+    list_display = ['name', 'actual', 'products_count', 'created_at']
+    list_filter = ['actual', 'created_at']
+    search_fields = ['name']
+    list_editable = ['actual']
+    list_per_page = 20
+    readonly_fields = ['created_at']
+    actions = ['make_actual', 'make_not_actual']
+    
+    fieldsets = (
+        ('Основная информация', {
+            'fields': ('name', 'actual')
+        }),
+        ('Дополнительная информация', {
+            'fields': ('created_at',),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def products_count(self, obj):
+        """
+        Отображает количество товаров в каталоге
+        """
+        return obj.products.count()
+    products_count.short_description = 'Количество товаров'
+    
+    def make_actual(self, request, queryset):
+        """
+        Действие: пометить каталоги как актуальные
+        """
+        updated = queryset.update(actual=True)
+        self.message_user(
+            request, 
+            f'{updated} каталогов помечено как актуальные'
+        )
+    make_actual.short_description = 'Пометить выбранные каталоги как актуальные'
+    
+    def make_not_actual(self, request, queryset):
+        """
+        Действие: пометить каталоги как неактуальные
+        """
+        updated = queryset.update(actual=False)
+        self.message_user(
+            request, 
+            f'{updated} каталогов помечено как неактуальные'
+        )
+    make_not_actual.short_description = 'Пометить выбранные каталоги как неактуальные'
+
+
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     """
     Админ-панель для товаров
     """
-    list_display = ('title', 'display_price', 'display_image', 'display_created_at')
-    list_filter = ('created_at',)
-    search_fields = ('title', 'description')
+    list_display = ('title', 'catalog', 'display_price', 'display_image', 'display_created_at')
+    list_filter = ('catalog', 'created_at',)  # Добавил фильтр по каталогу
+    search_fields = ('title', 'description', 'catalog__name')  # Добавил поиск по названию каталога
+    list_select_related = ('catalog',)  # Оптимизация запросов
     readonly_fields = ('created_at', 'display_image_preview')
     inlines = (ProductOptionInline,)
     fieldsets = (
         ('Основная информация', {
-            'fields': ('title', 'description', 'price', 'image')
+            'fields': ('title', 'description', 'price', 'catalog', 'image')  # Добавил catalog
         }),
         ('Дополнительная информация', {
             'fields': ('meta', 'created_at', 'display_image_preview'),
@@ -51,6 +104,10 @@ class ProductAdmin(admin.ModelAdmin):
     def display_created_at(self, obj):
         return obj.created_at.strftime('%d.%m.%Y %H:%M')
     display_created_at.short_description = 'Дата создания'
+
+    # Автодополнение для поля каталога (опционально)
+    autocomplete_fields = ['catalog']  # Добавьте эту строку если хотите поиск при выборе каталога
+
 
 
 class OrderItemInline(admin.TabularInline):
@@ -85,7 +142,6 @@ class OrderAdmin(admin.ModelAdmin):
     list_filter = ('status', 'created_at')
     search_fields = ('id', 'telegram_user_id', 'address')
     readonly_fields = ('created_at', 'display_items', 'display_created_at')
-    inlines = (OrderItemInline,)
     fieldsets = (
         ('Основная информация', {
             'fields': ('telegram_user_id', 'status', 'total', 'address')

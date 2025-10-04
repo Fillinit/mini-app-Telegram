@@ -1,5 +1,31 @@
 from django.db import models
 
+class Catalog(models.Model):
+    """
+    Модель каталога товаров
+    """
+    name = models.CharField(
+        verbose_name="Название каталога", 
+        max_length=255
+    )
+    actual = models.BooleanField(
+        verbose_name="Актуальность каталога",
+        default=True,
+        help_text="Отметьте, если каталог актуален"
+    )
+    created_at = models.DateTimeField(
+        verbose_name="Дата создания", 
+        auto_now_add=True
+    )
+
+    class Meta:
+        verbose_name = "Каталог"
+        verbose_name_plural = "Каталоги"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.name
+
 
 class Product(models.Model):
     """
@@ -14,6 +40,14 @@ class Product(models.Model):
     )
     image = models.ImageField(upload_to='Продукты/', verbose_name="Изображение", null=True, blank=True)
     meta = models.JSONField(verbose_name="Мета-данные товара", default=dict, blank=True)
+    catalog = models.ForeignKey(
+        Catalog,
+        verbose_name="Каталог",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="products"
+    )
     created_at = models.DateTimeField(verbose_name="Дата создания", auto_now_add=True)
 
     class Meta:

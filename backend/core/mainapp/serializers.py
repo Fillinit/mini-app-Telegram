@@ -1,5 +1,15 @@
 from rest_framework import serializers
-from .models import Product, ProductOption, Order, OrderItem
+from .models import Catalog, Product, ProductOption, Order, OrderItem
+
+class CatalogSerializer(serializers.ModelSerializer):
+    products_count = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Catalog
+        fields = ['id', 'name', 'actual', 'products_count', 'created_at']
+    
+    def get_products_count(self, obj):
+        return obj.products.count()
 
 
 class ProductOptionSerializer(serializers.ModelSerializer):
