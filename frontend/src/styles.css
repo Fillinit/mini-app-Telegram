@@ -1,0 +1,37 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+  }
+.header {
+background: #6f4e37;
+color: white;
+padding: 10px;
+display: flex;
+justify-content: space-between;
+}
+.sidebar {
+width: 200px;
+float: left;
+padding: 10px;
+}
+.products {
+margin-left: 220px;
+display: flex;
+flex-wrap: wrap;
+gap: 15px;
+}
+.product-card {
+border: 1px solid #ddd;
+padding: 10px;
+width: 180px;
+text-align: center;
+}
+.modal {
+position: fixed;
+top: 20%;
+left: 30%;
+background: white;
+border: 1px solid #ccc;
+padding: 20px;
+}  
