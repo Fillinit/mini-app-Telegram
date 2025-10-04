@@ -3,10 +3,13 @@ import requests
 import os
 from telebot import types
 from invoices import create_invoice_payload
+from decouple import config
 
 # Токен Telegram-бота
-BOT_TOKEN = config("BOT_TOKEN") #os.getenv("TELEGRAM_BOT_TOKEN")
-API_BASE = config("API_BASE")  # Django backend API
+BOT_TOKEN = config("BOT_TOKEN")
+API_BASE = config("API_BASE")
+token_url = config("TOKEN_URL")
+
 bot = telebot.TeleBot(BOT_TOKEN, parse_mode="HTML")
 
 
